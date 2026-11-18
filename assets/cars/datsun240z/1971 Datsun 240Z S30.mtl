@@ -1,0 +1,156 @@
+newmtl Bodyunrefunblend11Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka Bodyunrefunblend11_diff.png
+map_Kd Bodyunrefunblend11_diff.png
+map_d Bodyunrefunblend11_diff.png
+
+newmtl Rim2Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka Rim2_diff.png
+map_Kd Rim2_diff.png
+map_d Rim2_diff.png
+
+newmtl Bodyunrefunblend1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka Bodyunrefunblend1_diff.png
+map_Kd Bodyunrefunblend1_diff.png
+map_d Bodyunrefunblend1_diff.png
+
+newmtl Glass1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 0.501961
+
+Ns 0
+
+map_Ka Numberplate1_diff.png
+map_Kd Numberplate1_diff.png
+map_d Numberplate1_diff.png
+
+newmtl Bodyrefblend11Mtl
+Material Color
+Ka 0.00455975 0.0253713 0.0938759
+Kd 0.00455975 0.0253713 0.0938759
+Ks 0.00273585 0.0152228 0.0563255 
+
+d 1
+
+Ns 0
+
+newmtl Numberplate1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka Numberplate1_diff.png
+map_Kd Numberplate1_diff.png
+map_d Numberplate1_diff.png
+
+newmtl Man1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka Man1_diff.png
+map_Kd Man1_diff.png
+map_d Man1_diff.png
+
+newmtl Puncheffnuminnernalphaalphaita1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 0.952941
+
+Ns 0
+
+map_Ka Puncheffnuminnernalphaalphaita1_diff.png
+map_Kd Puncheffnuminnernalphaalphaita1_diff.png
+map_d Puncheffnuminnernalphaalphaita1_diff.png
+
+newmtl Bonnetrefblend1Mtl
+Material Color
+Ka 0.00411618 0.0242229 0.0869013
+Kd 0.00411618 0.0242229 0.0869013
+Ks 0.00246971 0.0145338 0.0521408 
+
+d 1
+
+Ns 0
+
+newmtl Tire1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka Tire1_diff.png
+map_Kd Tire1_diff.png
+map_d Tire1_diff.png
+
+newmtl Shadow1Mtl
+Material Color
+Ka 0 0 0
+Kd 0 0 0
+Ks 0 0 0 
+
+d 0
+
+Ns 0
+
+map_Ka Shadow1_diff.png
+map_Kd Shadow1_diff.png
+map_d Shadow1_diff.png
+
+newmtl Rim1Mtl
+Material Color
+Ka 0.00969633 0.00969633 0.00969633
+Kd 0.00969633 0.00969633 0.00969633
+Ks 0.0058178 0.0058178 0.0058178 
+
+d 1
+
+Ns 0
+

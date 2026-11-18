@@ -1,0 +1,82 @@
+newmtl body
+Kd 0.70 0.03 0.05
+Ks 0.40 0.40 0.40
+Ns 90
+illum 2
+
+newmtl black
+Kd 0.02 0.02 0.022
+Ks 0.04 0.04 0.04
+Ns 20
+illum 2
+
+newmtl black_m
+Kd 0.012 0.012 0.014
+Ks 0.06 0.06 0.06
+Ns 35
+illum 2
+
+newmtl gum
+Kd 0.025 0.025 0.028
+Ks 0.02 0.02 0.02
+Ns 8
+illum 2
+
+newmtl chrome
+Kd 0.74 0.75 0.78
+Ks 0.90 0.90 0.92
+Ns 200
+illum 3
+
+newmtl silver
+Kd 0.60 0.62 0.65
+Ks 0.55 0.55 0.58
+Ns 110
+illum 3
+
+newmtl gold
+Kd 0.80 0.58 0.20
+Ks 0.70 0.55 0.25
+Ns 120
+illum 3
+
+newmtl glass
+Kd 0.15 0.20 0.26
+Ks 0.70 0.70 0.75
+Ns 160
+d 0.35
+illum 4
+
+newmtl d_gass
+Kd 0.12 0.18 0.24
+Ks 0.55 0.55 0.6
+Ns 140
+d 0.40
+illum 4
+
+newmtl o_glass
+Kd 0.10 0.14 0.18
+Ks 0.5 0.5 0.55
+Ns 120
+d 0.35
+illum 4
+
+newmtl r_glass
+Kd 0.35 0.06 0.05
+Ks 0.4 0.2 0.2
+Ns 80
+d 0.55
+illum 4
+
+newmtl plate
+Kd 0.88 0.88 0.84
+Ks 0.1 0.1 0.1
+Ns 20
+illum 2
+
+newmtl refract
+Kd 0.65 0.70 0.78
+Ks 0.8 0.8 0.85
+Ns 180
+d 0.45
+illum 4

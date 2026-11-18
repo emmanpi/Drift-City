@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://cgo7w0yggdfyl"
+path="res://.godot/imported/1992 Nissan Silvia K's DIA Selection Custom.obj-1231ad93b54fbc33bc7b2bb931753e1e.mesh"
+
+[deps]
+
+files=["res://.godot/imported/1992 Nissan Silvia K's DIA Selection Custom.obj-1231ad93b54fbc33bc7b2bb931753e1e.mesh"]
+
+source_file="res://assets/cars/silvia_s13/1992 Nissan Silvia K's DIA Selection Custom.obj"
+dest_files=["res://.godot/imported/1992 Nissan Silvia K's DIA Selection Custom.obj-1231ad93b54fbc33bc7b2bb931753e1e.mesh", "res://.godot/imported/1992 Nissan Silvia K's DIA Selection Custom.obj-1231ad93b54fbc33bc7b2bb931753e1e.mesh"]
+
+[params]
+
+generate_tangents=false
+generate_lods=false
+generate_shadow_mesh=false
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false
