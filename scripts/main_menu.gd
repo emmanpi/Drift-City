@@ -3,6 +3,7 @@ extends Control
 const PREVIEW_SIZE := Vector2i(640, 220)
 const BOLD_FONT := "res://assets/fonts/Rajdhani-Bold.ttf"
 const SEMIBOLD_FONT := "res://assets/fonts/Rajdhani-SemiBold.ttf"
+const CITY_SCENE := "res://scenes/city.tscn"
 
 var _index := 0
 var _viewport: SubViewport
@@ -323,7 +324,8 @@ func _preview_spec(spec: Dictionary) -> Dictionary:
 
 func _start() -> void:
 	Game.selected_car_id = CarCatalog.by_index(_index)["id"]
-	get_tree().change_scene_to_file("res://scenes/city.tscn")
+	Loading.show_message("Chargement de la ville...")
+	get_tree().change_scene_to_file(CITY_SCENE)
 
 
 func _unhandled_input(event: InputEvent) -> void:

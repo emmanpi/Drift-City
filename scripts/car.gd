@@ -1,6 +1,12 @@
 extends CharacterBody3D
 
 const GROUND_Y := 0.02
+## Calque 4 (valeur 8) : faces de sol sondees par raycast, sans collision
+## physique, pour pouvoir monter sur les trottoirs.
+const GROUND_LAYER := 8
+const STEP_HEIGHT := 0.62
+const GROUND_PROBE := 3.0
+const FALL_GRAVITY := 22.0
 
 const NITRO_TOP_SPEED := 10.0
 const NITRO_ACCEL := 14.0
@@ -15,6 +21,10 @@ const CAM_ZOOM_MAX := 16.0
 const CAM_ZOOM_FACTOR := 0.88
 const CAM_DEFAULT_DIST := 8.6
 const CAM_DEFAULT_PITCH := 0.34
+## Ignore the mouse warp macOS emits when the pointer is captured, and any
+## implausible single jump (a real flick stays well below this).
+const CAM_MOUSE_GRACE := 0.35
+const CAM_MOUSE_MAX_STEP := 140.0
 
 const VISUAL_STEER_MAX := 0.52
 const VISUAL_STEER_SPEED := 12.0
@@ -34,6 +44,7 @@ var _forward_speed := 0.0
 var _lateral := 0.0
 var _drift_exit := 0.0
 var _was_colliding := false
+var _fall_speed := 0.0
 var _spawn_position := Vector3.ZERO
 var _spawn_yaw := 0.0
 var _car_width := 1.9
@@ -44,6 +55,7 @@ var _smoke_log := 0.0
 var _cam_yaw := 0.0
 var _cam_pitch := CAM_DEFAULT_PITCH
 var _cam_dist := CAM_DEFAULT_DIST
+var _mouse_grace := 0.0
 var _wheels: Array = []
 var _rear_wheels: Array = []
 var _skid: SkidMarks
@@ -67,6 +79,7 @@ func _ready() -> void:
 	_cam_pos = _camera_desired()
 	set_process_input(true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_mouse_grace = CAM_MOUSE_GRACE
 
 
 func bind_hud(node: CanvasLayer) -> void:
@@ -81,6 +94,7 @@ func reset_to_spawn() -> void:
 	global_position = _spawn_position
 	rotation = Vector3(0.0, _spawn_yaw, 0.0)
 	velocity = Vector3.ZERO
+	_fall_speed = 0.0
 	_forward_speed = 0.0
 	_lateral = 0.0
 	drifting = false
@@ -106,7 +120,9 @@ func reset_to_spawn() -> void:
 func _physics_process(delta: float) -> void:
 	_update_nitro(delta)
 	_smoke_drive(delta)
+	_step_up()
 	_drive(delta)
+	_resolve_ground(delta)
 	var moved := Vector2(velocity.x, velocity.z).length() * delta
 	var hit := get_slide_collision_count() > 0
 	if hit and not _was_colliding:
@@ -117,10 +133,49 @@ func _physics_process(delta: float) -> void:
 		_was_colliding = false
 		_update_drift(delta, moved)
 	_update_skid()
-	global_position.y = GROUND_Y
+
+
+## Hauteur du sol sous un point. Les faces de route/trottoir sont sur le
+## calque 8 ; en leur absence on retombe sur le sol virtuel y = GROUND_Y.
+func _ground_height_at(p: Vector3) -> float:
+	var space := get_world_3d().direct_space_state
+	if space == null:
+		return GROUND_Y
+	var q := PhysicsRayQueryParameters3D.create(
+		p + Vector3.UP * 1.5, p - Vector3.UP * GROUND_PROBE, GROUND_LAYER)
+	q.exclude = [get_rid()]
+	var hit := space.intersect_ray(q)
+	if hit.is_empty():
+		return GROUND_Y
+	return float(hit["position"].y)
+
+
+## Monte sur un trottoir avant le déplacement horizontal : sans cela la boîte
+## de collision heurterait la bordure comme un mur.
+func _step_up() -> void:
+	var fwd := -global_transform.basis.z
+	var ahead := global_position + fwd * 1.7
+	var h := maxf(_ground_height_at(global_position), _ground_height_at(ahead))
+	if h > global_position.y and h - global_position.y <= STEP_HEIGHT:
+		global_position.y = h
+		_fall_speed = 0.0
+
+
+## Après le déplacement : suit le sol, ou tombe si la surface est plus basse.
+func _resolve_ground(delta: float) -> void:
+	var h := _ground_height_at(global_position)
+	if h >= global_position.y - 0.22:
+		global_position.y = h
+		_fall_speed = 0.0
+		return
+	_fall_speed += FALL_GRAVITY * delta
+	global_position.y = maxf(h, global_position.y - _fall_speed * delta)
+	if global_position.y <= h + 0.001:
+		_fall_speed = 0.0
 
 
 func _process(delta: float) -> void:
+	_mouse_grace = maxf(_mouse_grace - delta, 0.0)
 	_update_camera(delta)
 	_update_body(delta)
 	_animate_wheels(delta)
@@ -309,12 +364,14 @@ func _update_skid() -> void:
 	for i in _rear_wheels.size():
 		var c: Vector3 = _rear_wheels[i]
 		var p := global_position + basis * Vector3(c.x, 0.0, c.z)
-		p.y = 0.04
+		p.y = global_position.y + 0.04
 		_skid.add_point(i, p)
 
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		if _mouse_grace > 0.0 or event.relative.length() > CAM_MOUSE_MAX_STEP:
+			return
 		_cam_yaw = wrapf(_cam_yaw - event.relative.x * CAM_MOUSE_SENS, -PI, PI)
 		_cam_pitch = clampf(_cam_pitch + event.relative.y * CAM_MOUSE_SENS, CAM_PITCH_MIN, CAM_PITCH_MAX)
 	elif event is InputEventMouseButton and event.pressed:
@@ -367,7 +424,7 @@ func _build_camera() -> void:
 	_camera = Camera3D.new()
 	_camera.fov = 68.0
 	_camera.near = 0.15
-	_camera.far = 500.0
+	_camera.far = 2400.0
 	_camera.current = true
 	add_child(_camera)
 
