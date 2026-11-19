@@ -18,7 +18,8 @@ const CARS := [
 		"id": "aveo",
 		"ratings": Vector3(0.35, 0.35, 0.35),
 		"name": "Chevrolet Aveo",
-		"tagline": "La berline pour apprendre",
+		"tagline": "The starter sedan",
+		"price": 0,
 		"model": "res://assets/cars/aveo/aveo.obj",
 		"paint": "obj",
 		"color": Color(0.68, 0.03, 0.06),
@@ -43,15 +44,16 @@ const CARS := [
 			"accel": 17.5,
 			"grip": 12.0,
 			"handbrake_grip": 2.60,
-			"steer_rate": 55.0,
-			"handbrake_steer": 85.0,
+			"steer_rate": 75.0,
+			"handbrake_steer": 115.0,
 		},
 	},
 	{
 		"id": "datsun240z",
 		"ratings": Vector3(0.55, 0.55, 0.60),
 		"name": "Datsun 240Z",
-		"tagline": "Classique, léger, joueur",
+		"tagline": "Light, classic, playful",
+		"price": 6000,
 		"model": "res://assets/cars/datsun240z/1971 Datsun 240Z S30.obj",
 		"paint": "mtl",
 		"color": Color(0.75, 0.42, 0.08),
@@ -76,15 +78,16 @@ const CARS := [
 			"accel": 18.5,
 			"grip": 11.0,
 			"handbrake_grip": 2.50,
-			"steer_rate": 58.0,
-			"handbrake_steer": 90.0,
+			"steer_rate": 78.0,
+			"handbrake_steer": 120.0,
 		},
 	},
 	{
 		"id": "silvia_s13",
 		"ratings": Vector3(0.70, 0.50, 0.95),
 		"name": "Nissan Silvia S13",
-		"tagline": "La reine du drift",
+		"tagline": "The drift queen",
+		"price": 9500,
 		"model": "res://assets/cars/silvia_s13/1992 Nissan Silvia K's DIA Selection Custom.obj",
 		"paint": "mtl",
 		"color": Color(0.62, 0.05, 0.09),
@@ -109,15 +112,16 @@ const CARS := [
 			"accel": 18.0,
 			"grip": 9.8,
 			"handbrake_grip": 2.40,
-			"steer_rate": 62.0,
-			"handbrake_steer": 96.0,
+			"steer_rate": 82.0,
+			"handbrake_steer": 128.0,
 		},
 	},
 	{
 		"id": "miata",
 		"ratings": Vector3(0.40, 0.75, 0.85),
 		"name": "Mazda MX-5 Miata",
-		"tagline": "Petite, vive, insaisissable",
+		"tagline": "Small, sharp, untouchable",
+		"price": 3500,
 		"model": "res://assets/cars/miata/mazda/miata.glb",
 		"paint": "scene",
 		"color": Color(0.85, 0.08, 0.07),
@@ -148,15 +152,16 @@ const CARS := [
 			"accel": 19.5,
 			"grip": 12.5,
 			"handbrake_grip": 2.50,
-			"steer_rate": 66.0,
-			"handbrake_steer": 100.0,
+			"steer_rate": 86.0,
+			"handbrake_steer": 132.0,
 		},
 	},
 	{
 		"id": "skyline",
 		"ratings": Vector3(0.95, 0.90, 0.45),
 		"name": "Nissan Skyline GT-R",
-		"tagline": "Lourde, rapide, impitoyable",
+		"tagline": "Heavy, fast, ruthless",
+		"price": 15000,
 		"model": "res://assets/cars/skyline/model/model.dae",
 		"paint": "pbr",
 		"pbr_dir": "res://assets/cars/skyline/model/textures",
@@ -182,8 +187,8 @@ const CARS := [
 			"accel": 21.0,
 			"grip": 13.5,
 			"handbrake_grip": 3.00,
-			"steer_rate": 50.0,
-			"handbrake_steer": 78.0,
+			"steer_rate": 70.0,
+			"handbrake_steer": 108.0,
 		},
 	},
 ]
@@ -205,4 +210,11 @@ static func index_of_id(id: String) -> int:
 	for i in CARS.size():
 		if CARS[i]["id"] == id:
 			return i
+	return 0
+
+
+static func price_of_id(id: String) -> int:
+	for car in CARS:
+		if car["id"] == id:
+			return int(car.get("price", 0))
 	return 0

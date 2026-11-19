@@ -24,7 +24,7 @@ en secours mais **plus utilisée**.
 |---|---|
 | `tools/bake_lowpoly_city.gd` | bake : fusion par cellules, décimation des arbres, collision exacte, sol, waypoints, spawn |
 | `low-poly-city/city.tscn` | ville prête à l'emploi : **25 cellules de 100 m**, 38 surfaces (≤ 3/cellule), 805 919 triangles |
-| `low-poly-city/city_collision.res` | murs : 40 trimesh de 60 m + 319 boîtes d'arbres |
+| `low-poly-city/city_collision.res` | murs : 30 trimesh de 60 m (cargos exclus) + 319 boîtes d'arbres |
 | `low-poly-city/city_ground.res` | sol : 64 morceaux / 26 440 faces horizontales (calque de collision 4) |
 | `low-poly-city/city_roads.res` | 262 points de passage (131 segments de route) pour les NPC |
 | `scripts/city_collision.gd`, `scripts/city_ground.gd`, `scripts/city_roads.gd` | resources `@export` correspondantes |
@@ -54,6 +54,14 @@ en secours mais **plus utilisée**.
   `Especial Car`, `Military Vehicle`, `Truck`, `Classic Car`, `Bus_`) et
   remplacés par des NPC roulants. Les feux (`Traffic`), avions et cargos
   restent en place.
+- **Cargos sans collision** : les 15 coques `Container Ship` sont encore
+  visibles mais leurs 75 966 triangles de collision ont été retirés
+  (`tools/strip_ship_collision.gd`). Le bake les ignore aussi désormais.
+- **Eau traversable** : aucun mur invisible au bord de l'eau. La voiture peut
+  rouler sur le port ; l'eau la ralentit, la fait couler légèrement puis la
+  ramène au **dernier point sur terre** avec un petit message « WORLD LIMIT /
+  You've reached the edge of the map. » (3 s). Pas d'écran de mort, et la
+  bourse n'est pas touchée. `R` ramène toujours au spawn.
 - **Sol cuit** : routes, trottoirs, pelouses et `City Ground` sont ajoutés au
   calque 4 (`collision_layer = 8`, `collision_mask = 0`) uniquement pour les
   raycasts ; hauteurs y ∈ [−0,29 ; 1,37], 83 % des faces à y ≈ 0.
@@ -73,6 +81,17 @@ en secours mais **plus utilisée**.
   dans les descentes ;
 - les traces de dérive suivent maintenant `global_position.y`.
 
+## Braquage
+
+- `scripts/car.gd` : vitesse de cap **`steer_rate` 70–86°/s** (au lieu de
+  50–66), **108–132°/s au frein à main** (au lieu de 78–100). Le cap est à
+  pleine puissance dès **8 m/s** (au lieu de 12), et les roues visuelles
+  tournent jusqu'à ±0,62 rad (au lieu de 0,52).
+- `scripts/car_catalog.gd` : Aveo 75/115, Datsun 78/120, S13 82/128,
+  Miata 86/132, Skyline 70/108 (les plus sportives tournent le plus).
+- `steer_test.gd` : à 119 km/h, **150° de cap en 2 s** en conduite normale,
+  **130° au frein à main** (la dérive fait glisser la trajectoire).
+
 Les NPC restent à `y = 0.02` (routes planes) : les poussées verticales dues aux
 collisions entre voitures sont annulées après `move_and_slide()`.
 
@@ -81,20 +100,23 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 - Prefabs dans `npc_cars/` : corps + 4 roues, échelle 0,001 (mètres), centrés au
   sol, longs de 2,8 à 5,8 m, tous alignés sur l'axe Z ; le plat `Cylinder001`
   de 21 688 unités est exclu.
-- **Sens avant par modèle** : 6 prefabs ont le nez vers +Z (hatchback, minivan,
-  offroad, sedan, suv, wagon), 4 vers −Z. Déduit des feux arrière rouges de la
-  texture `Optics`. La table `FRONT` dans `npc_traffic.gd` et `front_sign` dans
-  `npc_car.gd` corrigent l'`atan2` / le `+PI` : plus de NPC à l'envers.
-- 16 voitures, 10 modèles, vitesse 10–14 m/s (~36–50 km/h), `CharacterBody3D`
-  layer/mask 1 (donc collisions avec le joueur, les murs et les autres NPC →
-  une collision fait perdre le drift).
-- **Graphe orienté** : les 262 points du bake sont reconstitués en 131 segments,
-  reliés quand leurs extrémités sont à moins de 12 m (**676 liaisons**). Chaque
-  NPC part de l'extrémité où il se trouve vers l'autre bout de son segment, puis
-  choisit un segment adjacent au carrefour. Les demi-tours sont écartés
-  (`incoming.dot(outgoing) > -0.2`) ainsi que le segment parcouru : plus de
-  coupe en diagonale à travers les immeubles. Blocage > 0,7 s → retarget,
-  ralentissement progressif à l'approche du carrefour.
+- **Sens avant par modèle** : table `FRONT` dans `npc_traffic.gd` (+1 pour
+  compact, hatchback, minivan, offroad, pickup, sedan, sport, suv, wagon ; −1
+  pour coupe) et `front_sign` dans `npc_car.gd`. Les modèles ne roulent plus à
+  l'envers.
+- 16 voitures, 10 modèles, `CharacterBody3D` layer 1 / mask 0 : les contacts
+  joueur/NPC et NPC/NPC sont résolus manuellement, sans faire perdre le drift
+  par une collision physique parasite.
+- **Moteur porté de `mrdoob/slop-newyork`** : graphe de **130 carrefours et
+  216 voies orientées** reconstruit depuis les tuiles `Road_*` (grille ~11,4 m),
+  courbes de Bézier aux carrefours, modèle de poursuite IDM (vitesse, gap,
+  freinage), anticipation de courbure et contacts avec impulsion angulaire.
+- **Dégagement** : une voiture bloquée ou trop proche d'un obstacle recule en
+  tournant (`reverse_left`) puis reprend sa voie ; pas de marche arrière
+  visuelle permanente, pas de téléportation, pas de chevauchement.
+- **Nombre configurable** : 16 voitures par défaut, réglable de **0 à 100**
+  depuis le menu pause (`set_count()` ajoute/retire des NPC en direct, sans
+  recharger la ville). La valeur est sauvegardée avec la partie.
 - Aucune ombre portée (GPU intégré).
 
 ### Résultats des tests
@@ -102,9 +124,38 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 - `spawn_check.gd` : voiture à `(-31.8, −0.056, −9.8)`, **0 collision**, mur à 22 m.
 - `wall_test.gd` : accélération + nitro (155 km/h) vers le mur à 22 m →
   arrêt à z = −29,75, **mur bloquant, pas de tunneling**.
-- `npc_traffic_check.gd` (7 s de physique) : **16/16 NPC en mouvement**,
-  **16/16 bien orientés** (avant aligné sur la vitesse), **16/16 sur route**
-  (≤ 3 m), y stable ; 30 à 67 m parcourus en 7 s.
+- `npc_traffic_check.gd` (15 s de physique) : **16/16 bien orientés** (avant
+  aligné sur la vitesse), **16/16 sur chaussée** (≤ 2,3 m de l'axe),
+  **0 chevauchement profond**, 13 à 15/16 en mouvement selon les arrêts aux
+  carrefours ; 35 à 130 m parcourus.
+- `water_death_test.gd` : depuis la côte est, la voiture avance sans mur ; dans
+  le port elle est ramenée au dernier point sur terre (x = 120), le message
+  « WORLD LIMIT » s'affiche puis se cache tout seul, et `R` ramène au spawn
+  avec la bourse intacte.
+- `purchase_test.gd` : sans argent, l'achat est refusé (« You need $6000
+  more. ») ; avec 10 000 $, la Datsun est achetée (bourse 4 000 $) puis le
+  bouton affiche `START ENGINE`.
+- `drift_money_test.gd` : drift sur sol plat → bourse créditée et sauvegardée
+  (478 $ sur le dernier essai, avec le braquage augmenté).
+- `hud_check.gd` : compteur FPS actif, textes `HANDBRAKE`, nom de voiture et
+  bourse affichés, message « WORLD LIMIT » masqué au départ.
+- `reflections_test.gd` : par défaut les matériaux NPC sont plats (metallic 0,
+  sans textures) ; le bouton du menu pause rétablit les matériaux PBR d'origine
+  (metallic 1 + textures) en direct, puis les désactive à nouveau ; le réglage
+  est relu au lancement suivant (`reflets=true`).
+- `save_read_menu.gd` : après un achat dans une première session, le vrai menu
+  recharge `$ 4000`, `Datsun 240Z`, `Owned` et `npc=87` au lancement suivant.
+- `pause_menu_test.gd` : `Esc` ouvre le menu (`paused=true`), les boutons
+  `RESUME / MAIN MENU / QUIT GAME` sont présents ; `+` passe à 17 voitures,
+  les bornes 0 et 100 tiennent (boutons désactivés). Clic sur le nombre +
+  saisie `42` → 42 NPC en direct ; `a7b3` → 7, champ vide → valeur conservée.
+  `RESUME` rend la main.
+- `pause_input_test.gd` : vraie touche `Échap` injectée via `Input` →
+  ouverture puis fermeture du menu (correctif : le gestionnaire n'appelait
+  que `hide_menu()`, jamais `show_menu()`).
+- `pause_typing_test.gd` : focus sur le champ, frappe réelle de `4` puis `2`
+  via `Input` → `42` dans le champ, `Entrée` → 42 NPC en direct, `Échap`
+  annule la saisie et garde le menu ouvert.
 - `fps_probe.gd` : 50,3 fps à l'arrêt, 25,7 fps en roulant avec nitro sur la
   dernière mesure (fenêtré, Iris 550). Le coût par image du trafic n'a pas
   changé (graphe et alignement calculés au chargement) : la baisse est
@@ -117,12 +168,43 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 - Captures : `shot_air.png` (luminance 0,51), `shot_spawn.png` (0,59),
   `shot_npc.png` (0,48, 302 teintes) → éclairage correct, NPC rendu, pas d'écran gris.
 
-## Question en suspens
+## Port, eau et garage
 
-La nouvelle map contient un port (15 cargos, géométrie sous y = 0). L'utilisateur
-n'a pas encore choisi : bordure invisible autour de l'eau ou voiture libre de
-rouler dessus (le sol cuit suit la géométrie, donc le comportement dépend des
-faces présentes).
+- **Port ouvert** : les limites invisibles sont celles de toute la map
+  (`Rect2(-283, -343, 566, 686)`). Il n'y a plus de mur au bord de l'eau :
+  la voiture entre dans le port librement.
+- **Limite du monde** : au-dessus de l'eau (raycast sans sol cuit, ou sol sous
+  `y = −0,12`), la voiture ralentit et coule légèrement, puis est remise au
+  dernier point sur terre (position + cap mémorisés à chaque frame sur sol)
+  après 0,9 s. Un petit bandeau « WORLD LIMIT / You've reached the edge of
+  the map. » s'affiche 3 s. Plus de carte « YOU DIED » ; bourse et voitures
+  achetées intactes.
+- Les 15 cargos restent visuels et sans collision (75 966 triangles retirés) :
+  on peut traverser leurs coques sur l'eau.
+- **Garage** : seule la Chevrolet Aveo est offerte. Les autres doivent être
+  achetées dans le menu (le bouton devient `BUY $prix`) :
+  Mazda MX-5 Miata **3 500 $**, Datsun 240Z **6 000 $**,
+  Nissan Silvia S13 **9 500 $**, Nissan Skyline GT-R **15 000 $**.
+- La bourse, les voitures possédées, la dernière voiture choisie et le nombre
+  de NPC sont sauvegardés dans `user://progress.cfg` après chaque achat, drift
+  encaissé ou réglage du trafic, et rechargés à chaque lancement (vérifié sur
+  deux sessions séparées). Le menu affiche « Progress saved automatically ».
+  `DRIFT_SAVE_PATH` permet aux tests d'utiliser un fichier séparé.
+- Interface entièrement en anglais (menu, HUD, chargement, contrôles).
+
+## Menu pause
+
+- `Esc` ouvre `scripts/pause_menu.gd` (CanvasLayer `PROCESS_MODE_ALWAYS`,
+  `get_tree().paused = true`, souris visible) avec **RESUME**, **MAIN MENU**,
+  **QUIT GAME**. `Esc` / `Entrée` reprend aussi la partie.
+- Ligne **NPC CARS IN CITY** : boutons `−` / `+`, valeur **0 à 100**, défaut
+  **16**. Le signal `npc_count_changed` appelle `Traffic.set_count()` en direct,
+  puis `Game.set_npc_count()` écrit `player/npc_count` dans la sauvegarde.
+- Le nombre est un `LineEdit` cliquable : clic puis frappe au clavier (chiffres
+  seulement), `Entrée` valide, `Échap` annule la saisie. Les valeurs hors plage
+  sont ramenées à 0–100 et un champ vide conserve la valeur précédente.
+- Boutons désactivés aux bornes ; la ville n'est pas rechargée pour changer le
+  trafic.
 
 ## Ancienne map (historique, utile pour comprendre le bug réglé)
 
@@ -141,8 +223,10 @@ faces présentes).
 | Fichier | Rôle |
 |---|---|
 | `project.godot` | rendu GL Compatibility, MSAA 2, autoloads `Inputs`/`Game`/`Loading`, scène principale `main_menu.tscn` |
-| `scripts/car.gd` | physique de drift, caméra orbitale, argent, roues, traces, sol en Y |
-| `scripts/main_menu.gd` | menu, aperçu 3D, sélection des 5 voitures |
+| `scripts/car.gd` | physique de drift, caméra orbitale, argent, roues, traces, sol en Y, limite du monde |
+| `scripts/game_state.gd` | bourse, voitures possédées, nombre de NPC, sauvegarde `user://progress.cfg` |
+| `scripts/main_menu.gd` | menu, aperçu 3D, sélection et achat des 5 voitures |
+| `scripts/pause_menu.gd` | menu pause : reprendre, menu principal, quitter, réglage NPC 0–100 au clavier |
 | `scripts/hud.gd`, `speedometer.gd`, `speedometer_dial.gd` | HUD et compteur à aiguille |
 | `scripts/loading.gd` | voile de chargement (autoload) |
 | `scenes/car.tscn` | `CharacterBody3D`, layer 2 / mask 1, boîte 1,9 × 1,5 × 4,2 |
@@ -155,10 +239,25 @@ faces présentes).
 # ville (contrôle rapide des erreurs de chargement)
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://scenes/city.tscn
 
-# spawn / murs / trafic / fps
+# spawn / murs / trafic / eau / garage / fps
 ... --headless --path . --script res://tools/spawn_check.gd
 ... --headless --path . --script res://tools/wall_test.gd
+... --headless --path . --script res://tools/steer_test.gd
 ... --headless --path . --script res://tools/npc_traffic_check.gd
+... --headless --path . --script res://tools/water_death_test.gd
+DRIFT_SAVE_PATH=user://test_pause.cfg \
+  ... --headless --path . --script res://tools/pause_menu_test.gd
+DRIFT_SAVE_PATH=user://test_pause_input.cfg \
+  ... --headless --path . --script res://tools/pause_input_test.gd
+DRIFT_SAVE_PATH=user://test_typing.cfg \
+  ... --headless --path . --script res://tools/pause_typing_test.gd
+DRIFT_SAVE_PATH=user://test_progress.cfg \
+  ... --headless --path . --script res://tools/purchase_test.gd
+DRIFT_SAVE_PATH=user://test_progress.cfg \
+  ... --headless --path . --script res://tools/save_read_menu.gd
+DRIFT_SAVE_PATH=user://test_drift.cfg \
+  ... --headless --path . --script res://tools/drift_money_test.gd
+... --headless --path . --script res://tools/hud_check.gd
 /Applications/Godot.app/Contents/MacOS/Godot --path . --script res://tools/fps_probe.gd
 
 # drift sur sol plat
@@ -170,6 +269,9 @@ DRIFT_SMOKE=1 DRIFT_SMOKE_LONG=1 DRIFT_CAR=miata \
 # régénérer la ville (≈ 10 s) et les prefabs NPC
 ... --headless --path . --script res://tools/bake_lowpoly_city.gd
 ... --headless --path . --script res://tools/bake_npc_cars.gd
+
+# retirer les collisions des cargos d'un city_collision.res existant
+... --headless --path . --script res://tools/strip_ship_collision.gd
 
 # lumière / sol / captures
 ... --headless --path . --script res://tools/normals_probe.gd

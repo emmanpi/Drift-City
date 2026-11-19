@@ -1,21 +1,27 @@
 class_name SkidMarks
 extends Node3D
 
-## Traces de pneus persistantes.
+## Persistent tyre marks.
 ##
-## Chaque segment est une instance de MultiMesh (un quad posé au sol). Un
-## tampon circulaire limite le nombre de marques ; les plus anciennes
-## s'effacent progressivement puis sont recyclées.
+## Each rear wheel leaves a narrow rubber strip made of short overlapping
+## quads laid on the actual ground height. Segments are short (0.13 m) and
+## follow the wheel's real travel direction, so a drift draws two smooth,
+## parallel curves instead of wide squares pivoting around the car.
 
-const MAX_MARKS := 1000
-const MARK_LIFE := 7.0
-const MARK_STEP := 0.24
-const MARK_WIDTH := 0.24
-const GROUND_Y := 0.045
+const MAX_MARKS := 2600
+const MARK_LIFE := 9.0
+const MARK_STEP := 0.13
+## Width of one tyre contact patch, in metres.
+const MARK_WIDTH := 0.19
+## Small overlap hides the join between two consecutive quads in a turn.
+const MARK_OVERLAP := 0.09
+const GROUND_Y := 0.035
+const OPACITY := 0.72
 
 var _mm: MultiMesh
 var _ages := PackedFloat32Array()
 var _head := 0
+## Last emitted world position of each wheel.
 var _last := {}
 var _ready_done := false
 
@@ -56,6 +62,7 @@ func _build_quad() -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)
+	# Local X = tyre width, local Z = travel direction.
 	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([
 		Vector3(-0.5, 0.0, -0.5), Vector3(0.5, 0.0, -0.5),
 		Vector3(0.5, 0.0, 0.5), Vector3(-0.5, 0.0, 0.5),
@@ -70,7 +77,8 @@ func _build_quad() -> ArrayMesh:
 
 func _build_material() -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.035, 0.035, 0.04, 1.0)
+	# Dark rubber; the per-instance alpha fades the mark over time.
+	mat.albedo_color = Color(0.045, 0.042, 0.048, 1.0)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.vertex_color_use_as_albedo = true
@@ -79,6 +87,7 @@ func _build_material() -> StandardMaterial3D:
 	return mat
 
 
+## pos is the wheel contact point, already placed on (or just above) the road.
 func add_point(id: int, pos: Vector3) -> void:
 	if not _ready_done:
 		return
@@ -91,14 +100,15 @@ func add_point(id: int, pos: Vector3) -> void:
 	var dist := delta.length()
 	if dist < MARK_STEP:
 		return
-	# Téléportation / remise au départ : on repart proprement.
+	# Teleport / reset: start a fresh line instead of drawing across the map.
 	if dist > 2.5:
 		_last[id] = pos
 		return
+
 	var angle := atan2(delta.x, delta.z)
 	var mid := (last + pos) * 0.5
-	mid.y = GROUND_Y
-	_emit(mid, angle, dist + 0.05)
+	mid.y = pos.y
+	_emit(mid, angle, dist + MARK_OVERLAP)
 	_last[id] = pos
 
 
@@ -111,7 +121,7 @@ func _emit(pos: Vector3, angle: float, length: float) -> void:
 	_head = (_head + 1) % MAX_MARKS
 	var basis := Basis(Vector3.UP, angle).scaled(Vector3(MARK_WIDTH, 1.0, length))
 	_mm.set_instance_transform(i, Transform3D(basis, pos))
-	_mm.set_instance_color(i, Color(1.0, 1.0, 1.0, 1.0))
+	_mm.set_instance_color(i, Color(1.0, 1.0, 1.0, OPACITY))
 	_ages[i] = MARK_LIFE
 
 
@@ -124,4 +134,4 @@ func _process(delta: float) -> void:
 			continue
 		age = maxf(age - delta, 0.0)
 		_ages[i] = age
-		_mm.set_instance_color(i, Color(1.0, 1.0, 1.0, age / MARK_LIFE))
+		_mm.set_instance_color(i, Color(1.0, 1.0, 1.0, OPACITY * age / MARK_LIFE))

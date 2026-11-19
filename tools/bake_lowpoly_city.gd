@@ -123,6 +123,9 @@ func _read(mi: MeshInstance3D, xf: Transform3D) -> void:
 	var name := String(mi.name)
 	var is_tree := name.contains("Tree")
 	var is_road := name.begins_with("Road_")
+	# Les cargos restent visuels : le joueur ne peut plus les atteindre grâce
+	# aux bordures du port, et leurs grosses coques n'ont plus de collision.
+	var is_ship := name.begins_with("Container Ship")
 	var is_ground := name.begins_with("Road_") or name.begins_with("City Ground_") \
 		or name.begins_with("Grass_") or name.begins_with("House Road_")
 	# Voitures et véhicules statiques retirés : remplacés par les NPC.
@@ -227,7 +230,7 @@ func _read(mi: MeshInstance3D, xf: Transform3D) -> void:
 				Vector3(TRUNK_RADIUS * 2.0, TRUNK_HEIGHT, TRUNK_RADIUS * 2.0),
 			])
 		else:
-			if not is_ground:
+			if not is_ground and not is_ship:
 				_add_collision(verts, idx)
 			if is_ground:
 				_add_ground(verts, idx)

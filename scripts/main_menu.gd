@@ -1,6 +1,6 @@
 extends Control
 
-const PREVIEW_SIZE := Vector2i(640, 220)
+const PREVIEW_SIZE := Vector2i(640, 190)
 const BOLD_FONT := "res://assets/fonts/Rajdhani-Bold.ttf"
 const SEMIBOLD_FONT := "res://assets/fonts/Rajdhani-SemiBold.ttf"
 const CITY_SCENE := "res://scenes/city.tscn"
@@ -11,8 +11,11 @@ var _holder: Node3D
 var _preview_car: Node3D
 var _name_label: Label
 var _tagline_label: Label
+var _price_label: Label
 var _wallet_label: Label
 var _loading: Label
+var _notice: Label
+var _start_button: Button
 var _bars := {}
 var _gen := 0
 
@@ -67,6 +70,15 @@ func _build_background() -> void:
 	_wallet_label.offset_bottom = 52
 	add_child(_wallet_label)
 
+	var saved := _label("Progress saved automatically", 12, Color(0.58, 0.64, 0.72))
+	saved.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	saved.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	saved.offset_left = -260
+	saved.offset_top = 54
+	saved.offset_right = -32
+	saved.offset_bottom = 74
+	add_child(saved)
+
 
 func _build_ui() -> void:
 	var center := CenterContainer.new()
@@ -75,14 +87,14 @@ func _build_ui() -> void:
 
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", 6)
 	box.custom_minimum_size = Vector2(700, 0)
 	center.add_child(box)
 
-	var title := _label("JEU DRIFT", 54, Color.WHITE)
+	var title := _label("DRIFT CITY", 54, Color.WHITE)
 	title.add_theme_font_override("font", load(BOLD_FONT))
 	box.add_child(title)
-	box.add_child(_label("Glisse dans la ville. Pas d'objectif.", 17, Color(0.72, 0.76, 0.84)))
+	box.add_child(_label("Slide through the city. No goal.", 17, Color(0.72, 0.76, 0.84)))
 
 	_build_preview(box)
 
@@ -108,6 +120,9 @@ func _build_ui() -> void:
 	_tagline_label = _label("", 17, Color(0.86, 0.55, 0.3))
 	box.add_child(_tagline_label)
 
+	_price_label = _label("", 20, Color(0.55, 1.0, 0.62))
+	box.add_child(_price_label)
+
 	var card := PanelContainer.new()
 	var csb := StyleBoxFlat.new()
 	csb.bg_color = Color(0.06, 0.07, 0.095, 0.7)
@@ -129,33 +144,37 @@ func _build_ui() -> void:
 	stats.add_theme_constant_override("v_separation", 6)
 	stats.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	card.add_child(stats)
-	_bars["speed"] = _stat_row(stats, "Vitesse", Color(0.95, 0.35, 0.35))
-	_bars["accel"] = _stat_row(stats, "Accélération", Color(0.95, 0.72, 0.25))
+	_bars["speed"] = _stat_row(stats, "Speed", Color(0.95, 0.35, 0.35))
+	_bars["accel"] = _stat_row(stats, "Acceleration", Color(0.95, 0.72, 0.25))
 	_bars["drift"] = _stat_row(stats, "Drift", Color(0.35, 0.8, 1.0))
 
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 2)
 	box.add_child(spacer)
 
-	var start := Button.new()
-	start.text = "COMMENCER"
-	start.custom_minimum_size = Vector2(300, 58)
-	start.add_theme_font_size_override("font_size", 26)
-	start.add_theme_stylebox_override("normal", _pill(Color(0.80, 0.10, 0.12), Color(1, 1, 1, 0.0), 29))
-	start.add_theme_stylebox_override("hover", _pill(Color(0.95, 0.17, 0.18), Color(1, 1, 1, 0.30), 29))
-	start.add_theme_stylebox_override("pressed", _pill(Color(0.60, 0.07, 0.09), Color(1, 1, 1, 0.0), 29))
-	start.add_theme_stylebox_override("focus", _pill(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 29))
-	start.add_theme_color_override("font_color", Color.WHITE)
-	start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start.focus_mode = Control.FOCUS_NONE
-	start.pressed.connect(_start)
-	box.add_child(start)
+	_start_button = Button.new()
+	_start_button.text = "START ENGINE"
+	_start_button.custom_minimum_size = Vector2(300, 58)
+	_start_button.add_theme_font_size_override("font_size", 26)
+	_start_button.add_theme_stylebox_override("normal", _pill(Color(0.80, 0.10, 0.12), Color(1, 1, 1, 0.0), 29))
+	_start_button.add_theme_stylebox_override("hover", _pill(Color(0.95, 0.17, 0.18), Color(1, 1, 1, 0.30), 29))
+	_start_button.add_theme_stylebox_override("pressed", _pill(Color(0.60, 0.07, 0.09), Color(1, 1, 1, 0.0), 29))
+	_start_button.add_theme_stylebox_override("focus", _pill(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 29))
+	_start_button.add_theme_color_override("font_color", Color.WHITE)
+	_start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_start_button.focus_mode = Control.FOCUS_NONE
+	_start_button.pressed.connect(_start)
+	box.add_child(_start_button)
 
-	_loading = _label("Chargement du modèle...", 15, Color(0.7, 0.75, 0.85))
+	_loading = _label("Loading model...", 15, Color(0.7, 0.75, 0.85))
 	_loading.custom_minimum_size = Vector2(0, 20)
 	box.add_child(_loading)
 
-	var hint := _label("← → choisir    Entrée commencer    WASD conduire    Espace frein à main\nMaj nitro    Souris caméra    Molette zoom    R remettre    Échap quitter", 14, Color(0.6, 0.65, 0.73))
+	_notice = _label("", 15, Color(0.55, 1.0, 0.62))
+	_notice.custom_minimum_size = Vector2(0, 18)
+	box.add_child(_notice)
+
+	var hint := _label("← → choose    Enter start    WASD drive    Space handbrake\nShift nitro    Mouse camera    Wheel zoom    R reset    Esc quit", 14, Color(0.6, 0.65, 0.73))
 	box.add_child(hint)
 
 
@@ -290,14 +309,25 @@ func _refresh() -> void:
 	_gen += 1
 	var gen := _gen
 	var spec := CarCatalog.by_index(_index)
-	Game.selected_car_id = spec["id"]
+	var id := String(spec["id"])
+	var owned := Game.owns(id)
 	_name_label.text = spec["name"]
 	_tagline_label.text = spec["tagline"]
+	_wallet_label.text = "$ %d" % Game.wallet
+	if owned:
+		_price_label.text = "Owned" if id != "aveo" else "Included"
+		_price_label.add_theme_color_override("font_color", Color(0.55, 1.0, 0.62))
+		_start_button.text = "START ENGINE"
+	else:
+		_price_label.text = "Price  $%d" % int(spec.get("price", 0))
+		_price_label.add_theme_color_override("font_color", Color(0.95, 0.72, 0.25))
+		_start_button.text = "BUY  $%d" % int(spec.get("price", 0))
+	_notice.text = ""
 	var ratings: Vector3 = spec.get("ratings", Vector3(0.5, 0.5, 0.5))
 	_bars["speed"].value = ratings.x
 	_bars["accel"].value = ratings.y
 	_bars["drift"].value = ratings.z
-	_loading.text = "Chargement du modèle..."
+	_loading.text = "Loading model..."
 
 	if _preview_car:
 		_preview_car.queue_free()
@@ -323,8 +353,23 @@ func _preview_spec(spec: Dictionary) -> Dictionary:
 
 
 func _start() -> void:
-	Game.selected_car_id = CarCatalog.by_index(_index)["id"]
-	Loading.show_message("Chargement de la ville...")
+	var spec := CarCatalog.by_index(_index)
+	var id := String(spec["id"])
+	if not Game.owns(id):
+		var price := int(spec.get("price", 0))
+		if not Game.buy_car(id):
+			var missing := maxi(price - Game.wallet, 0)
+			_notice.text = "You need $%d more." % missing
+			_notice.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
+			return
+		# Purchase successful: refresh the card and let the player start.
+		_refresh()
+		_notice.text = "Car unlocked! Press Enter to drive."
+		_notice.add_theme_color_override("font_color", Color(0.55, 1.0, 0.62))
+		return
+	Game.selected_car_id = id
+	Game.save_progress()
+	Loading.show_message("Loading city...")
 	get_tree().change_scene_to_file(CITY_SCENE)
 
 

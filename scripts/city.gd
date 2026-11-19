@@ -47,16 +47,22 @@ func _ready() -> void:
 	traffic.set_script(preload("res://scripts/npc_traffic.gd"))
 	add_child(traffic)
 
+	# Esc opens the pause menu with Main menu / Quit and the live NPC counter.
+	var pause: Node = load("res://scripts/pause_menu.gd").new()
+	pause.name = "PauseMenu"
+	add_child(pause)
+	pause.connect("npc_count_changed", func(count: int): traffic.set_count(count))
+	pause.connect("npc_reflections_changed", func(enabled: bool): traffic.set_reflections(enabled))
+
 	Loading.hide_loading()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("menu"):
-		get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
-	elif event.is_action_pressed("reset"):
-		var car := get_node_or_null("Car")
-		if car:
-			car.reset_to_spawn()
+	var car := get_node_or_null("Car")
+	if car == null:
+		return
+	if event.is_action_pressed("reset"):
+		car.reset_to_spawn()
 
 
 func _build_environment() -> void:

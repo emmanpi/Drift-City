@@ -19,7 +19,9 @@ func _ready() -> void:
 	add_child(sun)
 
 	var floor_body := StaticBody3D.new()
-	floor_body.collision_layer = 1
+	# Layer 8 : le sol est lu par raycast, comme le sol cuit de la ville.
+	# Sans cela le contrôle anti-noyade croit que la voiture est sur l'eau.
+	floor_body.collision_layer = 8
 	floor_body.collision_mask = 0
 	var cs := CollisionShape3D.new()
 	var box := BoxShape3D.new()

@@ -7,6 +7,13 @@ const GROUND_LAYER := 8
 const STEP_HEIGHT := 0.62
 const GROUND_PROBE := 3.0
 const FALL_GRAVITY := 22.0
+## Water is driveable: no invisible wall stops the player. After a short
+## splash the car is returned to the last point on land with a small world
+## limit message (no death card).
+const WATER_Y := -0.12
+const WATER_LIMIT_DELAY := 0.9
+const WATER_SINK_SPEED := 0.35
+const WATER_SINK_MAX := 0.42
 
 const NITRO_TOP_SPEED := 10.0
 const NITRO_ACCEL := 14.0
@@ -26,7 +33,7 @@ const CAM_DEFAULT_PITCH := 0.34
 const CAM_MOUSE_GRACE := 0.35
 const CAM_MOUSE_MAX_STEP := 140.0
 
-const VISUAL_STEER_MAX := 0.52
+const VISUAL_STEER_MAX := 0.62
 const VISUAL_STEER_SPEED := 12.0
 
 var spec: Dictionary = {}
@@ -45,6 +52,11 @@ var _lateral := 0.0
 var _drift_exit := 0.0
 var _was_colliding := false
 var _fall_speed := 0.0
+var _water_time := 0.0
+var _water_sink := 0.0
+## Dernier point sur terre, utilisé pour revenir après être entré dans l'eau.
+var _last_land_position := Vector3.ZERO
+var _last_land_yaw := 0.0
 var _spawn_position := Vector3.ZERO
 var _spawn_yaw := 0.0
 var _car_width := 1.9
@@ -74,6 +86,8 @@ func _ready() -> void:
 	collision_mask = 1
 	_spawn_position = global_position
 	_spawn_yaw = rotation.y
+	_last_land_position = global_position
+	_last_land_yaw = rotation.y
 	_build_visuals()
 	_build_camera()
 	_cam_pos = _camera_desired()
@@ -87,7 +101,7 @@ func bind_hud(node: CanvasLayer) -> void:
 
 
 func car_name() -> String:
-	return String(spec.get("name", "Voiture"))
+	return String(spec.get("name", "Car"))
 
 
 func reset_to_spawn() -> void:
@@ -97,6 +111,12 @@ func reset_to_spawn() -> void:
 	_fall_speed = 0.0
 	_forward_speed = 0.0
 	_lateral = 0.0
+	_water_time = 0.0
+	_water_sink = 0.0
+	_last_land_position = global_position
+	_last_land_yaw = rotation.y
+	if hud:
+		hud.hide_limit()
 	drifting = false
 	drift_meters = 0.0
 	_drift_exit = 0.0
@@ -123,6 +143,7 @@ func _physics_process(delta: float) -> void:
 	_step_up()
 	_drive(delta)
 	_resolve_ground(delta)
+	_check_water(delta)
 	var moved := Vector2(velocity.x, velocity.z).length() * delta
 	var hit := get_slide_collision_count() > 0
 	if hit and not _was_colliding:
@@ -137,17 +158,67 @@ func _physics_process(delta: float) -> void:
 
 ## Hauteur du sol sous un point. Les faces de route/trottoir sont sur le
 ## calque 8 ; en leur absence on retombe sur le sol virtuel y = GROUND_Y.
-func _ground_height_at(p: Vector3) -> float:
+func _ground_hit_at(p: Vector3) -> Dictionary:
 	var space := get_world_3d().direct_space_state
 	if space == null:
-		return GROUND_Y
+		return {}
 	var q := PhysicsRayQueryParameters3D.create(
 		p + Vector3.UP * 1.5, p - Vector3.UP * GROUND_PROBE, GROUND_LAYER)
 	q.exclude = [get_rid()]
-	var hit := space.intersect_ray(q)
+	return space.intersect_ray(q)
+
+
+func _ground_height_at(p: Vector3) -> float:
+	var hit := _ground_hit_at(p)
 	if hit.is_empty():
 		return GROUND_Y
 	return float(hit["position"].y)
+
+
+## The harbour has no walls: the player can drive straight into the water.
+## After a short splash the car is sent back to the last point on land.
+func _is_over_water() -> bool:
+	var hit := _ground_hit_at(global_position)
+	return hit.is_empty() or float(hit["position"].y) < WATER_Y
+
+
+func _check_water(delta: float) -> void:
+	if not _is_over_water():
+		# On land: remember where to come back if we drive into the harbour.
+		_water_time = 0.0
+		_water_sink = 0.0
+		_last_land_position = global_position
+		_last_land_yaw = rotation.y
+		return
+	_water_time += delta
+	_water_sink = minf(_water_sink + WATER_SINK_SPEED * delta, WATER_SINK_MAX)
+	global_position.y = GROUND_Y - _water_sink
+	# The water slows the car down before the world limit pushes it back.
+	var drag := clampf(1.0 - 0.5 * delta, 0.0, 1.0)
+	velocity.x *= drag
+	velocity.z *= drag
+	if _water_time >= WATER_LIMIT_DELAY:
+		_return_to_last_land()
+
+
+func _return_to_last_land() -> void:
+	global_position = _last_land_position
+	global_position.y = _ground_height_at(global_position) + 0.02
+	rotation.y = _last_land_yaw
+	velocity = Vector3.ZERO
+	_fall_speed = 0.0
+	_forward_speed = 0.0
+	_lateral = 0.0
+	_water_time = 0.0
+	_water_sink = 0.0
+	drifting = false
+	drift_meters = 0.0
+	_drift_exit = 0.0
+	_was_colliding = false
+	if _skid:
+		_skid.reset()
+	if hud:
+		hud.show_limit()
 
 
 ## Monte sur un trottoir avant le déplacement horizontal : sans cela la boîte
@@ -213,10 +284,10 @@ func _drive(delta: float) -> void:
 
 	# Rotation du châssis. Elle s'annule à l'arrêt pour éviter de tourner
 	# sur place, et s'inverse en marche arrière.
-	var speed_factor := clampf(speed / 12.0, 0.0, 1.0)
-	var yaw_rate := deg_to_rad(_stat("steer_rate", 55.0))
-	if handbrake and speed > 5.0:
-		yaw_rate = deg_to_rad(_stat("handbrake_steer", 85.0))
+	var speed_factor := clampf(speed / 8.0, 0.0, 1.0)
+	var yaw_rate := deg_to_rad(_stat("steer_rate", 75.0))
+	if handbrake and speed > 4.0:
+		yaw_rate = deg_to_rad(_stat("handbrake_steer", 115.0))
 	rotation.y += yaw_rate * steer * dir * speed_factor * delta
 
 	forward = -global_transform.basis.z
@@ -296,7 +367,7 @@ func _bank() -> void:
 	var amount := int(round(meters * float(_multiplier(meters))))
 	if amount <= 0:
 		return
-	Game.wallet += amount
+	Game.add_money(amount)
 	if hud:
 		hud.show_bank(amount)
 
@@ -364,7 +435,9 @@ func _update_skid() -> void:
 	for i in _rear_wheels.size():
 		var c: Vector3 = _rear_wheels[i]
 		var p := global_position + basis * Vector3(c.x, 0.0, c.z)
-		p.y = global_position.y + 0.04
+		# Follow the real surface (road, pavement) instead of a fixed height:
+		# marks no longer float above or cut through the ground.
+		p.y = _ground_height_at(p) + 0.02
 		_skid.add_point(i, p)
 
 

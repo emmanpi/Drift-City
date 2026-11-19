@@ -16,9 +16,14 @@ var car_label: Label
 var nitro_label: Label
 var drift_bar: ProgressBar
 var nitro_bar: ProgressBar
+var fps_label: Label
 
 var _drift_panel: Panel
+var _limit: Control
+var _limit_t := 0.0
 var _feedback_t := 0.0
+var _fps_frames := 0
+var _fps_time := 0.0
 
 
 func _ready() -> void:
@@ -34,6 +39,13 @@ func _ready() -> void:
 	wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	wallet_label.add_theme_color_override("font_color", Color(0.55, 1.0, 0.62))
 
+	# --- FPS (pilule en haut à droite, discrète).
+	_panel(root, Control.PRESET_TOP_RIGHT, -128, 16, -20, 50, 14)
+	fps_label = _label(root, 18)
+	_place(fps_label, Control.PRESET_TOP_RIGHT, -128, 16, -20, 50)
+	fps_label.text = "FPS --"
+	fps_label.add_theme_color_override("font_color", Color(0.75, 0.86, 1.0))
+
 	# --- Drift (carte centrée en haut).
 	_drift_panel = _panel(root, Control.PRESET_CENTER_TOP, -200, 12, 200, 122, 18)
 	drift_label = _label(root, 36)
@@ -45,7 +57,7 @@ func _ready() -> void:
 	mult_label.add_theme_color_override("font_color", Color(1.0, 0.84, 0.35))
 
 	handbrake_label = _label(root, 18)
-	handbrake_label.text = "FREIN À MAIN"
+	handbrake_label.text = "HANDBRAKE"
 	handbrake_label.add_theme_color_override("font_color", Color(1.0, 0.58, 0.22))
 	_place(handbrake_label, Control.PRESET_CENTER_TOP, -200, 126, 200, 152)
 
@@ -54,7 +66,7 @@ func _ready() -> void:
 	feedback.modulate.a = 0.0
 
 	var hint := _label(root, 15)
-	hint.text = "WASD / flèches    Espace frein à main    Maj nitro    Souris caméra    Molette zoom    R remettre    Échap menu"
+	hint.text = "WASD / Arrows    Space handbrake    Shift nitro    Mouse camera    Wheel zoom    R reset    Esc menu"
 	hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.62))
 	_place(hint, Control.PRESET_BOTTOM_LEFT, 24, -42, 960, -14)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -78,6 +90,38 @@ func _ready() -> void:
 	nitro_bar = _bar(root, Color(0.25, 0.8, 1.0))
 	_place(nitro_bar, Control.PRESET_BOTTOM_RIGHT, -560, -74, -300, -64)
 
+	# --- Petit message de limite du monde (retour sur la dernière terre ferme).
+	_limit = PanelContainer.new()
+	_limit.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_limit.offset_left = -190
+	_limit.offset_top = 74
+	_limit.offset_right = 190
+	_limit.offset_bottom = 128
+	_limit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_limit.visible = false
+	var limit_style := StyleBoxFlat.new()
+	limit_style.bg_color = Color(0.05, 0.06, 0.09, 0.86)
+	limit_style.set_corner_radius_all(12)
+	limit_style.set_border_width_all(1)
+	limit_style.border_color = Color(0.96, 0.62, 0.24, 0.5)
+	limit_style.content_margin_left = 18
+	limit_style.content_margin_right = 18
+	limit_style.content_margin_top = 7
+	limit_style.content_margin_bottom = 7
+	_limit.add_theme_stylebox_override("panel", limit_style)
+	root.add_child(_limit)
+	var limit_box := VBoxContainer.new()
+	limit_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	limit_box.add_theme_constant_override("separation", 1)
+	_limit.add_child(limit_box)
+	var limit_title := _label(limit_box, 24)
+	limit_title.text = "WORLD LIMIT"
+	limit_title.add_theme_font_override("font", load("res://assets/fonts/Rajdhani-Bold.ttf"))
+	limit_title.add_theme_color_override("font_color", Color(0.98, 0.68, 0.28))
+	var limit_sub := _label(limit_box, 15)
+	limit_sub.text = "You've reached the edge of the map."
+	limit_sub.add_theme_color_override("font_color", Color(0.86, 0.9, 0.96))
+
 	_set_drift_visible(false)
 	handbrake_label.visible = false
 
@@ -88,6 +132,23 @@ func _process(delta: float) -> void:
 		feedback.modulate.a = clampf(_feedback_t, 0.0, 1.0)
 	else:
 		feedback.modulate.a = 0.0
+
+	if _limit_t > 0.0:
+		_limit_t -= delta
+		if _limit_t <= 0.0:
+			_limit.visible = false
+
+	# Moyenne glissante sur ~0,4 s : le chiffre reste lisible sans scintiller.
+	_fps_frames += 1
+	_fps_time += delta
+	if _fps_time >= 0.4:
+		var fps := float(_fps_frames) / _fps_time
+		fps_label.text = "FPS %d" % roundi(fps)
+		fps_label.add_theme_color_override("font_color", \
+			Color(0.55, 1.0, 0.62) if fps >= 50.0 else \
+			Color(1.0, 0.84, 0.35) if fps >= 30.0 else Color(1.0, 0.42, 0.38))
+		_fps_frames = 0
+		_fps_time = 0.0
 
 
 func set_state(kmh: float, wallet: int, meters: float, mult: int, cash: int, drifting: bool, handbrake: bool, nitro: float, nitro_active: bool, car_name: String) -> void:
@@ -113,9 +174,21 @@ func show_bank(amount: int) -> void:
 
 
 func show_crash() -> void:
-	feedback.text = "Drift perdu"
+	feedback.text = "Drift lost"
 	feedback.add_theme_color_override("font_color", Color(1.0, 0.38, 0.32))
 	_feedback_t = 1.3
+
+
+func show_limit() -> void:
+	_limit.visible = true
+	_limit_t = 3.0
+	feedback.modulate.a = 0.0
+	_feedback_t = 0.0
+
+
+func hide_limit() -> void:
+	_limit.visible = false
+	_limit_t = 0.0
 
 
 func _set_drift_visible(on: bool) -> void:

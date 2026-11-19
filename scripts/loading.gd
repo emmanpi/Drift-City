@@ -33,14 +33,14 @@ func _ready() -> void:
 	center.add_child(box)
 
 	var title := Label.new()
-	title.text = "JEU DRIFT"
+	title.text = "DRIFT CITY"
 	title.add_theme_font_override("font", load("res://assets/fonts/Rajdhani-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", 46)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 
 	_label = Label.new()
-	_label.text = "Chargement..."
+	_label.text = "Loading..."
 	_label.add_theme_font_override("font", load("res://assets/fonts/Rajdhani-SemiBold.ttf"))
 	_label.add_theme_font_size_override("font_size", 18)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
