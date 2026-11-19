@@ -77,7 +77,27 @@ static func attach(root: Node3D, wrapper: Node3D, spec: Dictionary) -> Array:
 			# Les sommets sont restés dans l'espace source : ce transform les
 			# amène autour du centre de roue, dans l'espace voiture.
 			var gxf: Transform3D = g["xf"]
-			mi.transform = Transform3D(gxf.basis, gxf.origin - center)
+			var basis := gxf.basis
+			var origin: Vector3 = gxf.origin - center
+			# Les nœuds de roue des GLB (Miata) sont parfois légèrement
+			# inclinés (~5° autour de Z) : la roue tournerait alors en biais.
+			# On remet son axe dans le plan X, sans toucher aux roues extraites
+			# de surfaces de carrosserie (OBJ), dont l'axe source est différent.
+			if bool(g.get("align", false)):
+				var ax := basis.x
+				if ax.length_squared() > 1e-8:
+					ax = ax.normalized()
+					if absf(ax.x) > 0.90:
+						var target := Vector3.RIGHT if ax.x > 0.0 else Vector3.LEFT
+						var dot := clampf(ax.dot(target), -1.0, 1.0)
+						var corr := Basis.IDENTITY
+						if dot < 0.9999:
+							var axis := ax.cross(target)
+							corr = Basis(axis.normalized(), acos(dot)) if axis.length_squared() > 1e-8 \
+								else Basis(Vector3.UP, PI)
+						basis = corr * basis
+						origin = corr * origin
+			mi.transform = Transform3D(basis, origin)
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			spin.add_child(mi)
 
@@ -212,7 +232,8 @@ static func _extract_mesh(mi: MeshInstance3D, node_xf: Transform3D, xf: Transfor
 				continue
 			var out: Array = arr.duplicate(false)
 			out[Mesh.ARRAY_INDEX] = dst
-			collected[w].append({"arrays": out, "mat": mat, "xf": full_xf})
+			collected[w].append({"arrays": out, "mat": mat, "xf": full_xf,
+				"align": node_hit})
 
 		if keep.size() == 0:
 			continue
