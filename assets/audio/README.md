@@ -4,15 +4,18 @@
 
 | Moment | Piste | Emplacement |
 |---|---|---|
-| En jeu | la piste que vous déposez (actuellement `Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3`, NCS) | à la racine du projet ou dans `assets/audio/music/` |
-| Menu principal | `menu_theme.wav` (composé pour le projet, original) | `assets/audio/music/menu_theme.wav` |
+| En jeu | `game_theme.wav` — morceau original rapide/industriel (174 BPM, 44 s) | `assets/audio/music/game_theme.wav` |
+| Menu principal | `menu_theme.wav` — boucle originale (140 BPM, 13,7 s) | `assets/audio/music/menu_theme.wav` |
 
-`Sound._find_game_music()` prend le premier fichier `.mp3`, `.ogg` ou `.wav`
-trouvé à la racine ou dans `assets/audio/music/` (par ordre alphabétique, hors
-`menu_theme.wav`). Changer de musique = remplacer le fichier, sans toucher au
-code. Les `.mp3` à la racine sont ignorés par Git, sauf
-`Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3` qui est versionné
-(sous licence NCS — crédits : Warriyo, Tokyo Machine, Boom Kitty).
+Les deux pistes sont **générées dans ce dépôt** par `tools/generate_game_music.py`
+et `tools/generate_menu_music.py` : aucun sample ni mélodie provenant d'un
+soundtrack existant n'est utilisé. La musique de jeu est énergique et
+industrielle (basse saturée, double kick, arpèges dissonants) dans l'esprit des
+jeux rythmés rapides, sans reproduction d'un morceau précis.
+
+`Sound._find_game_music()` utilise d'abord `game_theme.wav`, puis, s'il manque,
+n'importe quel `.mp3`, `.ogg` ou `.wav` déposé à la racine ou dans
+`assets/audio/music/`. Les MP3 à la racine restent ignorés par Git.
 
 La musique est gérée par l'autoload `Sound` : `main_menu.gd` appelle
 `play_menu_music()`, `city.gd` appelle `play_game_music()`. Le changement de
@@ -36,6 +39,7 @@ Pour régénérer toutes les pistes originales :
 ```
 python3 tools/generate_sfx.py
 python3 tools/generate_menu_music.py
+python3 tools/generate_game_music.py
 ```
 
 Les boucles sont construites à partir de partiels dont la fréquence est un

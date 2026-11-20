@@ -2,18 +2,17 @@
 .DS_Store
 smoke_*.png
 
-# Musiques à la racine : ignorées par défaut, sauf le morceau versioné ci-dessous
+# Musiques déposées à la racine : la musique de jeu est désormais générée dans
+# assets/audio/music/game_theme.wav, donc aucun MP3 racine n'est nécessaire.
 /*.mp3
 /*.mp3.import
-!Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3
-!Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3.import
 
-# Gros assets volontairement exclus de l'historique Git
+# Sources lourdes non nécessaires pour jouer (modèles déjà importés/compacts).
 assets/cars/miata/mazda/miata.blend
-assets/cars/miata/mazda/miata.glb
-assets/cars/skyline/model/model.dae
-gm-bigcity/source/gm_big_city_by_digitalexplorations_dd50fdv (2).rar
-low-poly-city/source/Untitled.glb
-assets/cars/aveo/aveo.obj
 assets/cars/miata/mazda/miata.obj
-low-poly-city/city.tscn
+assets/cars/miata/mazda/miata.obj.import
+assets/cars/miata/mazda/miata.fbx
+assets/cars/miata/mazda/miata.fbx.import
+assets/cars/skyline/model/model.dae
+assets/cars/skyline/model/model.dae.import
+low-poly-city/source/Untitled.glb

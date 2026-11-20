@@ -162,7 +162,7 @@ const CARS := [
 		"name": "Nissan Skyline GT-R",
 		"tagline": "Heavy, fast, ruthless",
 		"price": 15000,
-		"model": "res://assets/cars/skyline/model/model.dae",
+		"model": "res://assets/cars/skyline/model/skyline_compact.scn",
 		"paint": "pbr",
 		"pbr_dir": "res://assets/cars/skyline/model/textures",
 		"color": Color(0.16, 0.34, 0.72),

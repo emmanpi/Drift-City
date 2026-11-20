@@ -211,12 +211,12 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 - Autoload `Sound` (`scripts/sound.gd`), ajouté après `Game` dans `project.godot`.
   Il possède deux lecteurs de musique et quatre lecteurs d'effets ; il survit
   aux changements de scène.
-- **En jeu** : piste fournie par l'utilisateur, actuellement
-  `Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3` (NCS) à la racine.
-  `Sound._find_game_music()` détecte automatiquement n'importe quel `.mp3`,
-  `.ogg` ou `.wav` à la racine ou dans `assets/audio/music/` (hors
-  `menu_theme.wav`) : changer de morceau ne demande aucun code. Les `.mp3` de la
-  racine sont ignorés par Git, sauf le morceau NCS ci-dessus qui est versionné.
+- **En jeu** : `assets/audio/music/game_theme.wav`, morceau **original** généré
+  par `tools/generate_game_music.py` (174 BPM, 44 s, basse saturée, double kick,
+  stabs et arpèges dissonants). Énergie industrial/breakcore dans l'esprit des
+  jeux rythmés rapides, sans aucune mélodie ni sample copié. Le MP3 NCS précédent
+  a été retiré du dépôt. `Sound._find_game_music()` utilise cette piste en
+  priorité et retombe sur un MP3 déposé à la racine si elle manque.
 - **Menu** : `assets/audio/music/menu_theme.wav`, boucle originale de 13,7 s
   composée par `tools/generate_menu_music.py` (basse, batterie, arpège, nappe ;
   8 mesures, raccord sans clic).
@@ -275,6 +275,11 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 ... --headless --path . --script res://tools/audio_check.gd
 python3 tools/generate_sfx.py
 python3 tools/generate_menu_music.py
+python3 tools/generate_game_music.py
+
+# modèles et dépendances (clone frais complet)
+... --headless --path . --script res://tools/model_check.gd
+... --headless --path . --script res://tools/dependency_check.gd
 
 # spawn / murs / trafic / eau / garage / fps
 ... --headless --path . --script res://tools/spawn_check.gd
@@ -342,9 +347,16 @@ DRIFT_SMOKE=1 DRIFT_SMOKE_LONG=1 DRIFT_CAR=miata \
 
 - `.godot/imported` : cache régénéré par Godot (474 Mo supprimés le 20/11,
   reimport automatique au prochain lancement).
-- `low-poly-city` ≈ 128 Mo (`city.tscn` 49 Mo, collision 20 Mo, GLB source 61 Mo).
+- Fichiers **versionnés nécessaires pour jouer** (un clone frais les contient) :
+  `low-poly-city/city.tscn` (49 Mo), `city_collision.res` (17 Mo),
+  `city_ground.res`, `city_roads.res`, `assets/cars/aveo/aveo.obj` (46 Mo),
+  `assets/cars/miata/mazda/miata.glb` (69 Mo),
+  `assets/cars/skyline/model/skyline_compact.scn` (35 Mo), les textures et les
+  deux WAV de musique. `tools/dependency_check.gd` valide qu'aucune dépendance
+  ne manque.
+- Les sources lourdes non utilisées au runtime restent ignorées :
+  `Untitled.glb` (61 Mo), `miata.obj`, `model.dae` (148 Mo, remplacé par la
+  scène compacte de 35 Mo), `miata.blend` (supprimé, 200 Mo).
 - `npc_cars` ≈ 4 Mo (10 prefabs), `generic_passenger_car_pack.glb` ≈ 12 Mo.
-- `assets/cars` ≈ 394 Mo après suppression de `miata.blend` (200 Mo) ; les
-  modèles utilisés (`miata.glb`, `model.dae` + textures) sont conservés.
 - `.git` ≈ 588 Mo : l'historique garde les anciens gros blobs. Une réduction
   réelle du dépôt GitHub demanderait une réécriture de l'historique (non faite).
