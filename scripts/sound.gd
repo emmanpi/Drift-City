@@ -122,7 +122,10 @@ func _load_loop(path: String) -> AudioStream:
 	if stream is AudioStreamWAV:
 		var wav := stream as AudioStreamWAV
 		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		wav.loop_end = 0
+		# loop_end = 0 coupe la lecture immédiatement (Godot 4.7) : il faut la
+		# longueur réelle en échantillons.
+		wav.loop_begin = 0
+		wav.loop_end = int(round(wav.get_length() * wav.mix_rate))
 	elif stream is AudioStreamMP3:
 		(stream as AudioStreamMP3).loop = true
 	elif stream is AudioStreamOggVorbis:
