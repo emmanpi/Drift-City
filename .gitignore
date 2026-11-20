@@ -1,3 +1,10 @@
 .godot/
 .DS_Store
 smoke_*.png
+
+# Gros assets volontairement exclus de l'historique Git
+assets/cars/miata/mazda/miata.blend
+assets/cars/miata/mazda/miata.glb
+assets/cars/skyline/model/model.dae
+gm-bigcity/source/gm_big_city_by_digitalexplorations_dd50fdv (2).rar
+low-poly-city/source/Untitled.glb
