@@ -17,8 +17,8 @@ Projet Godot 4.7.2, `/Users/elie/Documents/JeuDrift`, dépôt git (changements n
 ## Nouvelle ville (en service depuis le 19/11)
 
 Source : `low-poly-city/source/Untitled.glb` (63 Mo, 1 116 376 triangles,
-3 matériaux, 2 textures, 1 930 objets). Ancienne ville `gm-bigcity` conservée
-en secours mais **plus utilisée**.
+3 matériaux, 2 textures, 1 930 objets). Ancienne ville `gm-bigcity` supprimée
+le 20/11/2026 (plus utilisée ni conservée en secours).
 
 | Fichier | Rôle |
 |---|---|
@@ -244,7 +244,10 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 - `tools/rebuild_walls.gd` ligne 50 avait un filtre trop restrictif qui jetait
   les pans de mur dont le bas était au-dessus de y = 1,7 → la collision ne
   couvrait que 8 737 triangles sur ~84 000 visuels.
-- `gm-bigcity/` (332 Mo) est conservé pour revenir en arrière.
+- `gm-bigcity/` (332 Mo), ses outils (`bake_city.gd`, `bake_grey_city.gd`,
+  `rebuild_walls.gd`, `wall_check.gd`) et `miata.blend` (200 Mo) ont été
+  supprimés le 20/11/2026. Ces outils n'étaient plus utilisés ; le modèle
+  `miata.glb`, lui, reste chargé par le jeu.
 
 ## Fichiers clés inchangés
 
@@ -337,7 +340,11 @@ DRIFT_SMOKE=1 DRIFT_SMOKE_LONG=1 DRIFT_CAR=miata \
 
 ## Espace disque
 
-- `.godot/imported` ≈ 450 Mo (dont l'import du GLB, ~30 Mo).
-- `low-poly-city` ≈ 143 Mo (`city.tscn` 49 Mo, collision 20 Mo, GLB source 63 Mo).
-- `npc_cars` ≈ 8 Mo (10 prefabs), `generic_passenger_car_pack.glb` ≈ 12 Mo.
-- `gm-bigcity` ≈ 332 Mo : ancienne map, inutilisée, conservée pour rollback.
+- `.godot/imported` : cache régénéré par Godot (474 Mo supprimés le 20/11,
+  reimport automatique au prochain lancement).
+- `low-poly-city` ≈ 128 Mo (`city.tscn` 49 Mo, collision 20 Mo, GLB source 61 Mo).
+- `npc_cars` ≈ 4 Mo (10 prefabs), `generic_passenger_car_pack.glb` ≈ 12 Mo.
+- `assets/cars` ≈ 394 Mo après suppression de `miata.blend` (200 Mo) ; les
+  modèles utilisés (`miata.glb`, `model.dae` + textures) sont conservés.
+- `.git` ≈ 588 Mo : l'historique garde les anciens gros blobs. Une réduction
+  réelle du dépôt GitHub demanderait une réécriture de l'historique (non faite).
