@@ -16,6 +16,9 @@ var owned: Dictionary = {"aveo": true}
 var npc_count := DEFAULT_NPC
 ## PBR reflections on NPC cars (off by default: cheaper on integrated GPUs).
 var npc_reflections := false
+## Audio toggles, also stored in the save file.
+var music_enabled := true
+var sfx_enabled := true
 ## Overridable so automated tests never touch the player's real save.
 var save_path := SAVE_PATH
 
@@ -86,6 +89,22 @@ func set_npc_reflections(enabled: bool) -> void:
 	save_progress()
 
 
+func set_music_enabled(enabled: bool) -> void:
+	if enabled == music_enabled:
+		return
+	music_enabled = enabled
+	Sound.apply_settings()
+	save_progress()
+
+
+func set_sfx_enabled(enabled: bool) -> void:
+	if enabled == sfx_enabled:
+		return
+	sfx_enabled = enabled
+	Sound.apply_settings()
+	save_progress()
+
+
 func load_progress() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(save_path) == OK:
@@ -93,6 +112,8 @@ func load_progress() -> void:
 		selected_car_id = String(cfg.get_value("player", "car", "aveo"))
 		npc_count = clampi(int(cfg.get_value("player", "npc_count", DEFAULT_NPC)), MIN_NPC, MAX_NPC)
 		npc_reflections = bool(cfg.get_value("player", "npc_reflections", false))
+		music_enabled = bool(cfg.get_value("player", "music_enabled", true))
+		sfx_enabled = bool(cfg.get_value("player", "sfx_enabled", true))
 		var ids: Array = cfg.get_value("player", "owned", ["aveo"])
 		owned.clear()
 		for id in ids:
@@ -109,6 +130,8 @@ func save_progress() -> void:
 	cfg.set_value("player", "car", selected_car_id)
 	cfg.set_value("player", "npc_count", npc_count)
 	cfg.set_value("player", "npc_reflections", npc_reflections)
+	cfg.set_value("player", "music_enabled", music_enabled)
+	cfg.set_value("player", "sfx_enabled", sfx_enabled)
 	var ids: Array = []
 	for id in owned.keys():
 		if bool(owned[id]):

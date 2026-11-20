@@ -49,6 +49,7 @@ var _camera: Camera3D
 var _cam_pos := Vector3.ZERO
 var _forward_speed := 0.0
 var _lateral := 0.0
+var _pre_move_speed := 0.0
 var _drift_exit := 0.0
 var _was_colliding := false
 var _fall_speed := 0.0
@@ -94,6 +95,11 @@ func _ready() -> void:
 	set_process_input(true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_mouse_grace = CAM_MOUSE_GRACE
+	Sound.start_car_sounds()
+
+
+func _exit_tree() -> void:
+	Sound.stop_car_sounds()
 
 
 func bind_hud(node: CanvasLayer) -> void:
@@ -250,7 +256,24 @@ func _process(delta: float) -> void:
 	_update_camera(delta)
 	_update_body(delta)
 	_animate_wheels(delta)
+	_update_audio()
 	_update_hud()
+
+
+## Le moteur suit la vitesse et la charge ; le crissement suit le glissement
+## latéral, avec un plancher quand le frein à main est tiré.
+func _update_audio() -> void:
+	var speed := Vector2(velocity.x, velocity.z).length()
+	var throttle := absf(Input.get_axis("brake", "accelerate"))
+	Sound.update_engine(speed, throttle, nitro_active)
+	var speed_gate := clampf((speed - 3.0) / 10.0, 0.0, 1.0)
+	var slip := clampf((absf(_lateral) - 1.6) / 5.0, 0.0, 1.0)
+	var intensity := slip * speed_gate
+	if drifting:
+		intensity = maxf(intensity, 0.58)
+	if Input.is_action_pressed("handbrake") and speed > 4.0:
+		intensity = maxf(intensity, 0.7 * speed_gate)
+	Sound.update_skid(intensity)
 
 
 func _update_nitro(delta: float) -> void:
@@ -318,6 +341,7 @@ func _drive(delta: float) -> void:
 	var spd := vel.length()
 	if spd > top_speed:
 		vel = vel / spd * top_speed
+	_pre_move_speed = vel.length()
 
 	velocity = Vector3(vel.x, 0.0, vel.y)
 	move_and_slide()
@@ -331,6 +355,7 @@ func _drive(delta: float) -> void:
 
 func _crash() -> void:
 	var show := drifting and drift_meters >= 1.0
+	Sound.play_crash(clampf(_pre_move_speed / 18.0, 0.12, 1.0))
 	drifting = false
 	drift_meters = 0.0
 	_drift_exit = 0.0

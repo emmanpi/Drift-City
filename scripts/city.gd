@@ -26,6 +26,7 @@ const WALL_HEIGHT := 6.0
 
 
 func _ready() -> void:
+	Sound.play_game_music()
 	_build_environment()
 	_build_map()
 	_build_bounds()

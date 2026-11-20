@@ -206,6 +206,32 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 - Boutons désactivés aux bornes ; la ville n'est pas rechargée pour changer le
   trafic.
 
+## Audio (20/11/2026)
+
+- Autoload `Sound` (`scripts/sound.gd`), ajouté après `Game` dans `project.godot`.
+  Il possède deux lecteurs de musique et quatre lecteurs d'effets ; il survit
+  aux changements de scène.
+- **En jeu** : « The Cyber Grind » de Meganeko, fichier fourni par l'utilisateur
+  à la racine (`meganeko - The Cyber Grind (Ultrakill Soundtrack).mp3`). Morceau
+  copyrighté : ni généré ni redistribué par le dépôt ; `GAME_MUSIC_CANDIDATES`
+  accepte aussi `assets/audio/music/the_cyber_grind.{mp3,ogg,wav}`.
+- **Menu** : `assets/audio/music/menu_theme.wav`, boucle originale de 13,7 s
+  composée par `tools/generate_menu_music.py` (basse, batterie, arpège, nappe ;
+  8 mesures, raccord sans clic).
+- `main_menu.gd` appelle `play_menu_music()`, `city.gd` appelle
+  `play_game_music()`. Changement avec fondu de 0,8 s ; musique à −18 dB
+  pendant la pause (`Sound` est `PROCESS_MODE_ALWAYS`).
+- Effets synthétisés par `tools/generate_sfx.py` (Python standard, aucun sample
+  tiers) : `engine_low.wav` / `engine_high.wav` (deux couches, hauteur et volume
+  pilotés par la vitesse, charge et nitro), `tyre_skid.wav` (volume piloté par
+  le glissement latéral et le frein à main), `crash.wav` (one-shot déclenché
+  dans `_crash()`, amplifié selon la vitesse avant impact).
+- `car.gd` démarre/arrête les boucles à l'entrée/sortie de scène et les met à
+  jour chaque frame ; en pause, moteur et crissement sont coupés.
+- Menu pause : boutons **MUSIC** et **SOUNDS**, état sauvegardé dans
+  `user://progress.cfg` (`music_enabled`, `sfx_enabled`, défaut `true`).
+- Voir `assets/audio/README.md` pour les chemins et les commandes de régénération.
+
 ## Ancienne map (historique, utile pour comprendre le bug réglé)
 
 - Le sol était un empilement de **6 347 triangles horizontaux tous à y = 1,25**,
@@ -222,8 +248,9 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 
 | Fichier | Rôle |
 |---|---|
-| `project.godot` | rendu GL Compatibility, MSAA 2, autoloads `Inputs`/`Game`/`Loading`, scène principale `main_menu.tscn` |
-| `scripts/car.gd` | physique de drift, caméra orbitale, argent, roues, traces, sol en Y, limite du monde |
+| `project.godot` | rendu GL Compatibility, MSAA 2, autoloads `Inputs`/`Game`/`Sound`/`Loading`, scène principale `main_menu.tscn` |
+| `scripts/sound.gd`, `assets/audio/README.md` | musiques (jeu/menu), effets moteur/dérive/crash, réglages audio |
+| `scripts/car.gd` | physique de drift, caméra orbitale, argent, roues, traces, sol en Y, limite du monde, pilotage des effets |
 | `scripts/game_state.gd` | bourse, voitures possédées, nombre de NPC, sauvegarde `user://progress.cfg` |
 | `scripts/main_menu.gd` | menu, aperçu 3D, sélection et achat des 5 voitures |
 | `scripts/pause_menu.gd` | menu pause : reprendre, menu principal, quitter, réglage NPC 0–100 au clavier |
@@ -238,6 +265,11 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 ```
 # ville (contrôle rapide des erreurs de chargement)
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . res://scenes/city.tscn
+
+# audio : musiques, fondus, moteur/dérive/crash, pause
+... --headless --path . --script res://tools/audio_check.gd
+python3 tools/generate_sfx.py
+python3 tools/generate_menu_music.py
 
 # spawn / murs / trafic / eau / garage / fps
 ... --headless --path . --script res://tools/spawn_check.gd

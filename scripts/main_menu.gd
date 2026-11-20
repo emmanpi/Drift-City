@@ -22,6 +22,7 @@ var _gen := 0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Sound.play_menu_music()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_index = CarCatalog.index_of_id(Game.selected_car_id)
 	_build_background()
