@@ -295,8 +295,13 @@ func _cluster(arrays: Array, cell: float) -> Array:
 	var nt := PackedVector2Array()
 	for i in v.size():
 		var p := v[i]
-		var key := Vector3i(
-			int(floor(p.x / cell)), int(floor(p.y / cell)), int(floor(p.z / cell)))
+		# L'UV fait partie de la clé : la texture est une palette, fusionner deux
+		# sommets de cases différentes étirait le triangle sur toute la palette
+		# (palmiers « arc-en-ciel », voir tools/fix_tree_uvs.gd).
+		var t: Vector2 = uv[i] if uv != null and uv.size() > i else Vector2.ZERO
+		var key := [
+			int(floor(p.x / cell)), int(floor(p.y / cell)), int(floor(p.z / cell)),
+			int(floor(t.x * 1024.0)), int(floor(t.y * 1024.0))]
 		var j: int = cells.get(key, -1)
 		if j < 0:
 			j = nv.size()
