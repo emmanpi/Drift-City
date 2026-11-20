@@ -10,8 +10,9 @@
 `Sound._find_game_music()` prend le premier fichier `.mp3`, `.ogg` ou `.wav`
 trouvé à la racine ou dans `assets/audio/music/` (par ordre alphabétique, hors
 `menu_theme.wav`). Changer de musique = remplacer le fichier, sans toucher au
-code. Les `.mp3` à la racine sont exclus de Git (`.gitignore`) : ce sont vos
-fichiers, non redistribués par le dépôt.
+code. Les `.mp3` à la racine sont ignorés par Git, sauf
+`Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3` qui est versionné
+(sous licence NCS — crédits : Warriyo, Tokyo Machine, Boom Kitty).
 
 La musique est gérée par l'autoload `Sound` : `main_menu.gd` appelle
 `play_menu_music()`, `city.gd` appelle `play_game_music()`. Le changement de

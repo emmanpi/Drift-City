@@ -216,7 +216,7 @@ collisions entre voitures sont annulées après `move_and_slide()`.
   `Sound._find_game_music()` détecte automatiquement n'importe quel `.mp3`,
   `.ogg` ou `.wav` à la racine ou dans `assets/audio/music/` (hors
   `menu_theme.wav`) : changer de morceau ne demande aucun code. Les `.mp3` de la
-  racine sont ignorés par Git (fichiers non redistribués).
+  racine sont ignorés par Git, sauf le morceau NCS ci-dessus qui est versionné.
 - **Menu** : `assets/audio/music/menu_theme.wav`, boucle originale de 13,7 s
   composée par `tools/generate_menu_music.py` (basse, batterie, arpège, nappe ;
   8 mesures, raccord sans clic).

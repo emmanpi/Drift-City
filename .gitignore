@@ -2,9 +2,11 @@
 .DS_Store
 smoke_*.png
 
-# Musiques fournies localement (non redistribuées par le dépôt)
+# Musiques à la racine : ignorées par défaut, sauf le morceau versioné ci-dessous
 /*.mp3
 /*.mp3.import
+!Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3
+!Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3.import
 
 # Gros assets volontairement exclus de l'historique Git
 assets/cars/miata/mazda/miata.blend
