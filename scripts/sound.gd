@@ -95,6 +95,27 @@ func _find_game_music() -> String:
 	for path in GAME_MUSIC_CANDIDATES:
 		if ResourceLoader.exists(path):
 			return path
+	# N'importe quelle piste déposée à la racine du projet ou dans
+	# assets/audio/music/ devient la musique de jeu (hors thème du menu).
+	# Ainsi changer de morceau ne demande aucune modification du code.
+	var roots: Array[String] = ["res://", "res://assets/audio/music/"]
+	for dir_path in roots:
+		var dir := DirAccess.open(dir_path)
+		if dir == null:
+			continue
+		var names: Array[String] = []
+		for file_name in dir.get_files():
+			var ext: String = String(file_name).get_extension().to_lower()
+			if ext != "mp3" and ext != "ogg" and ext != "wav":
+				continue
+			if file_name == "menu_theme.wav":
+				continue
+			names.append(file_name)
+		names.sort()
+		for file_name in names:
+			var path: String = dir_path.path_join(file_name)
+			if ResourceLoader.exists(path):
+				return path
 	return ""
 
 

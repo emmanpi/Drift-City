@@ -4,14 +4,14 @@
 
 | Moment | Piste | Emplacement |
 |---|---|---|
-| En jeu | **The Cyber Grind — Meganeko** (votre fichier) | `meganeko - The Cyber Grind (Ultrakill Soundtrack).mp3` à la racine du projet |
+| En jeu | la piste que vous déposez (actuellement `Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3`, NCS) | à la racine du projet ou dans `assets/audio/music/` |
 | Menu principal | `menu_theme.wav` (composé pour le projet, original) | `assets/audio/music/menu_theme.wav` |
 
-Le morceau de Meganeko est protégé par le droit d'auteur : il n'est pas
-généré ni redistribué par ce dépôt (fichier exclu via `.gitignore`). Le jeu le
-charge depuis votre propre copie.
-Si vous le déplacez, `scripts/sound.gd` (`GAME_MUSIC_CANDIDATES`) accepte aussi
-`assets/audio/music/the_cyber_grind.{mp3,ogg,wav}`.
+`Sound._find_game_music()` prend le premier fichier `.mp3`, `.ogg` ou `.wav`
+trouvé à la racine ou dans `assets/audio/music/` (par ordre alphabétique, hors
+`menu_theme.wav`). Changer de musique = remplacer le fichier, sans toucher au
+code. Les `.mp3` à la racine sont exclus de Git (`.gitignore`) : ce sont vos
+fichiers, non redistribués par le dépôt.
 
 La musique est gérée par l'autoload `Sound` : `main_menu.gd` appelle
 `play_menu_music()`, `city.gd` appelle `play_game_music()`. Le changement de

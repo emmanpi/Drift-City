@@ -2,9 +2,9 @@
 .DS_Store
 smoke_*.png
 
-# Musique copyrightée fournie localement (non redistribuée par le dépôt)
-meganeko - The Cyber Grind (Ultrakill Soundtrack).mp3
-meganeko - The Cyber Grind (Ultrakill Soundtrack).mp3.import
+# Musiques fournies localement (non redistribuées par le dépôt)
+/*.mp3
+/*.mp3.import
 
 # Gros assets volontairement exclus de l'historique Git
 assets/cars/miata/mazda/miata.blend

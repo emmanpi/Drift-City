@@ -211,10 +211,12 @@ collisions entre voitures sont annulées après `move_and_slide()`.
 - Autoload `Sound` (`scripts/sound.gd`), ajouté après `Game` dans `project.godot`.
   Il possède deux lecteurs de musique et quatre lecteurs d'effets ; il survit
   aux changements de scène.
-- **En jeu** : « The Cyber Grind » de Meganeko, fichier fourni par l'utilisateur
-  à la racine (`meganeko - The Cyber Grind (Ultrakill Soundtrack).mp3`). Morceau
-  copyrighté : ni généré ni redistribué par le dépôt ; `GAME_MUSIC_CANDIDATES`
-  accepte aussi `assets/audio/music/the_cyber_grind.{mp3,ogg,wav}`.
+- **En jeu** : piste fournie par l'utilisateur, actuellement
+  `Warriyo - Mortals (TOKYO MACHINE & Boom Kitty Remix).mp3` (NCS) à la racine.
+  `Sound._find_game_music()` détecte automatiquement n'importe quel `.mp3`,
+  `.ogg` ou `.wav` à la racine ou dans `assets/audio/music/` (hors
+  `menu_theme.wav`) : changer de morceau ne demande aucun code. Les `.mp3` de la
+  racine sont ignorés par Git (fichiers non redistribués).
 - **Menu** : `assets/audio/music/menu_theme.wav`, boucle originale de 13,7 s
   composée par `tools/generate_menu_music.py` (basse, batterie, arpège, nappe ;
   8 mesures, raccord sans clic).
