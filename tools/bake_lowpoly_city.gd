@@ -158,11 +158,9 @@ func _read(mi: MeshInstance3D, xf: Transform3D) -> void:
 		var nsrc = arrays[Mesh.ARRAY_NORMAL]
 		if nsrc != null and nsrc.size() == v.size():
 			normals = _apply_rot(nsrc, xf)
-			# Le GLB est exporté avec des normales inversées par rapport à
-			# l'enroulement des triangles (93,7 % des faces) : la ville était
-			# éclairée « d'en bas ». On les retourne au bake.
-			for ni in normals.size():
-				normals[ni] = -normals[ni]
+			# Normales du GLB conservées telles quelles : elles respectent la
+			# convention de Godot (face avant = sens horaire). Les retourner
+			# éclairait la ville par en dessous (voir tools/fix_city_normals.gd).
 			has_normals = true
 		var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
 
@@ -297,8 +295,13 @@ func _cluster(arrays: Array, cell: float) -> Array:
 	var nt := PackedVector2Array()
 	for i in v.size():
 		var p := v[i]
-		var key := Vector3i(
-			int(floor(p.x / cell)), int(floor(p.y / cell)), int(floor(p.z / cell)))
+		# L'UV fait partie de la clé : la texture est une palette, fusionner deux
+		# sommets de cases différentes étirait le triangle sur toute la palette
+		# (palmiers « arc-en-ciel », voir tools/fix_tree_uvs.gd).
+		var t: Vector2 = uv[i] if uv != null and uv.size() > i else Vector2.ZERO
+		var key := [
+			int(floor(p.x / cell)), int(floor(p.y / cell)), int(floor(p.z / cell)),
+			int(floor(t.x * 1024.0)), int(floor(t.y * 1024.0))]
 		var j: int = cells.get(key, -1)
 		if j < 0:
 			j = nv.size()
