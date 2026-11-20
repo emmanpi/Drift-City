@@ -55,7 +55,8 @@ func _read(mi: MeshInstance3D, xf: Transform3D) -> void:
 			var p0 := xf * v[i0]
 			var p1 := xf * v[i1]
 			var p2 := xf * v[i2]
-			var gn := (p1 - p0).cross(p2 - p0)
+			# Godot : face avant = sens horaire, donc normale = -(p1-p0)×(p2-p0).
+			var gn := -(p1 - p0).cross(p2 - p0)
 			if gn.length_squared() < 1e-10:
 				continue
 			gn = gn.normalized()

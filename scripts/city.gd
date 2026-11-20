@@ -99,6 +99,9 @@ func _build_environment() -> void:
 	var fill := DirectionalLight3D.new()
 	fill.rotation_degrees = Vector3(-22, -145, 0)
 	fill.light_energy = 0.35
+	# Lumière d'appoint uniquement : sans ça, le ciel procédural dessine un
+	# second soleil, terne et flou.
+	fill.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
 	add_child(fill)
 
 

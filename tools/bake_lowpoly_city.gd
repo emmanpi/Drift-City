@@ -158,11 +158,9 @@ func _read(mi: MeshInstance3D, xf: Transform3D) -> void:
 		var nsrc = arrays[Mesh.ARRAY_NORMAL]
 		if nsrc != null and nsrc.size() == v.size():
 			normals = _apply_rot(nsrc, xf)
-			# Le GLB est exporté avec des normales inversées par rapport à
-			# l'enroulement des triangles (93,7 % des faces) : la ville était
-			# éclairée « d'en bas ». On les retourne au bake.
-			for ni in normals.size():
-				normals[ni] = -normals[ni]
+			# Normales du GLB conservées telles quelles : elles respectent la
+			# convention de Godot (face avant = sens horaire). Les retourner
+			# éclairait la ville par en dessous (voir tools/fix_city_normals.gd).
 			has_normals = true
 		var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
 
